@@ -15,6 +15,7 @@ A modern, user-friendly personal finance management application built with React
 - 🔍 Advanced search and filtering capabilities
 - 📈 Monthly and yearly graphical visualizations
 - 📊 Category-wise breakdown charts
+- 📄 Reciept Scanning with auto-updating the form. Supports both Image as well as PDF.
 - 📑 Export transactions and reports as PDF
 - 💰 Budget management with smart alerts (Logged-in users)
 
@@ -30,7 +31,7 @@ A modern, user-friendly personal finance management application built with React
 ### 1. Clone the Repository
 
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/OmMTelrandhe/Finance_Management
 cd project
 ```
 
