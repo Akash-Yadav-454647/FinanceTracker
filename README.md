@@ -9,7 +9,6 @@ A modern, user-friendly personal finance management application built with React
 - 🤖 AI-powered category suggestions
 - 🏷️ Tag-based transaction organization
 - 💱 Multi-currency support
-- 🌐 Works offline for non-logged-in users
 - 🔒 Secure authentication with Supabase
 - 📱 Responsive design for all devices
 - 🔍 Advanced search and filtering capabilities
@@ -158,8 +157,12 @@ The application will be available at `http://localhost:5173`
    - Add multiple tags separated by commas
    - Use tags for detailed filtering
    - Common tags appear in suggestions
+  
+4. **Reciept Scanning**
+   - Automatically fetching the data from the uploaded image/pdf.
+   - Autofills the form with the fetched data.
 
-4. **Search and Filtering:**
+5. **Search and Filtering:**
    - Quick search by description or tags
    - Filter transactions by:
      - Categories
@@ -168,7 +171,7 @@ The application will be available at `http://localhost:5173`
      - Currency
    - Save custom filter combinations
 
-5. **Graphical Visualizations:**
+6. **Graphical Visualizations:**
    - Monthly Overview:
      - Income vs Expense bar charts
      - Category-wise pie charts
@@ -184,19 +187,19 @@ The application will be available at `http://localhost:5173`
      - Custom date range selection
      - Toggle between chart types
 
-6. **Financial Insights:**
+7. **Financial Insights:**
    - Top spending categories
    - Monthly budget tracking
    - Expense patterns and trends
    - Category-wise budget alerts
 
-7. **PDF Export:**
+8. **PDF Export:**
    - Export transaction history as PDF
    - Customizable report layouts:
      - Transaction list with details
      - Income vs Expense analysis
 
-8. **Budget Management System** (Logged-in Users Only):
+9. **Budget Management System** (Logged-in Users Only):
    - Set monthly budgets:
      - Overall spending limit
      - Category-wise limits
@@ -234,7 +237,3 @@ The application will be available at `http://localhost:5173`
 3. Commit your changes
 4. Push to the branch
 5. Create a Pull Request
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
