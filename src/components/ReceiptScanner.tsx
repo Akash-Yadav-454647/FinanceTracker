@@ -24,6 +24,7 @@ export type ReceiptData = {
   description?: string;
   items?: string[];
   merchant?: string;
+  receiptFile?: File; // Added to store the receipt file
 };
 
 export default function ReceiptScanner({
@@ -144,6 +145,9 @@ export default function ReceiptScanner({
         receiptData.description = receiptData.merchant;
       }
 
+      // Include the file in the receipt data
+      receiptData.receiptFile = file;
+
       // Pass the data to the parent component
       onReceiptData(receiptData);
     } catch (err) {
@@ -174,7 +178,7 @@ export default function ReceiptScanner({
       setFileType(file.type);
 
       try {
-        // Process the receipt
+        // Process the receipt and include the file in the receipt data
         await processReceipt(file);
       } catch (err) {
         console.error("Error processing file:", err);

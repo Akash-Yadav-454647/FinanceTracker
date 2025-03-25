@@ -17,6 +17,8 @@ import { expenseCategories, incomeCategories } from "../data/categories";
 import { cn } from "../utils/cn";
 import CurrencySelector from "./CurrencySelector";
 import ReceiptScanner, { ReceiptData } from "./ReceiptScanner";
+import { uploadImage } from "../utils/uploadImage";
+import { useAuth } from "../context/AuthContext";
 
 type FormData = {
   amount: string;
@@ -55,6 +57,9 @@ export default function TransactionForm({
   const [selectedCurrency, setSelectedCurrency] =
     useState<Currency>(baseCurrency);
   const [lastPrediction, setLastPrediction] = useState<string>("");
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const { user } = useAuth();
 
   const handleReceiptData = (data: ReceiptData) => {
     if (data.amount) {
@@ -80,6 +85,11 @@ export default function TransactionForm({
     if (data.items && data.items.length > 0) {
       // Set tags from receipt items
       setValue("tags", data.items.slice(0, 5).join(", "));
+    }
+
+    // Store the receipt file for later upload
+    if (data.receiptFile) {
+      setReceiptFile(data.receiptFile);
     }
   };
 
@@ -181,49 +191,68 @@ export default function TransactionForm({
     }`;
   };
 
-  const processSubmit = (data: FormData) => {
-    const selectedCategory = categories.find(
-      (cat) => cat.id === data.categoryId
-    );
-
-    if (!selectedCategory) {
-      alert("Please select a category");
-      return;
-    }
-
-    const originalAmount = parseFloat(data.amount);
-    let finalAmount = originalAmount;
-
-    // Convert amount to base currency if different
-    if (data.currency !== baseCurrency.code) {
-      finalAmount = convertAmount(
-        originalAmount,
-        data.currency,
-        baseCurrency.code
+  const processSubmit = async (data: FormData) => {
+    setIsUploading(true);
+    try {
+      const selectedCategory = categories.find(
+        (cat) => cat.id === data.categoryId
       );
+
+      if (!selectedCategory) {
+        alert("Please select a category");
+        setIsUploading(false);
+        return;
+      }
+
+      const originalAmount = parseFloat(data.amount);
+      let finalAmount = originalAmount;
+
+      // Convert amount to base currency if different
+      if (data.currency !== baseCurrency.code) {
+        finalAmount = convertAmount(
+          originalAmount,
+          data.currency,
+          baseCurrency.code
+        );
+      }
+
+      // Upload receipt image if available
+      let receiptImageUrl = null;
+      if (receiptFile && user) {
+        receiptImageUrl = await uploadImage(receiptFile, "receipts", user.id);
+      }
+
+      const transaction: Omit<Transaction, "id"> = {
+        amount: finalAmount,
+        description: data.description,
+        category: selectedCategory,
+        date: new Date(data.date),
+        type: transactionType,
+        tags: data.tags ? data.tags.split(",").map((tag) => tag.trim()) : [],
+        currency: data.currency,
+        originalAmount:
+          data.currency !== baseCurrency.code ? originalAmount : undefined,
+        receiptImageUrl: receiptImageUrl || undefined,
+      };
+
+      onSubmit(transaction);
+
+      // Reset form and state
+      reset({
+        amount: "",
+        description: "",
+        categoryId: "",
+        date: new Date().toISOString().split("T")[0],
+        tags: "",
+        currency: baseCurrency.code,
+      });
+      setReceiptFile(null);
+    } catch (error) {
+      console.error("Error submitting transaction:", error);
+      alert("Failed to save transaction. Please try again.");
+    } finally {
+      setIsUploading(false);
     }
-
-    const transaction: Omit<Transaction, "id"> = {
-      amount: finalAmount,
-      description: data.description,
-      category: selectedCategory,
-      date: new Date(data.date),
-      type: transactionType,
-      tags: data.tags ? data.tags.split(",").map((tag) => tag.trim()) : [],
-      currency: data.currency,
-      originalAmount:
-        data.currency !== baseCurrency.code ? originalAmount : undefined,
-    };
-
-    onSubmit(transaction);
-    reset({
-      amount: "",
-      description: "",
-      categoryId: "",
-      date: new Date().toISOString().split("T")[0],
-      tags: "",
-      currency: baseCurrency.code,
-    });
   };
 
   // Get confidence level color
@@ -270,7 +299,7 @@ export default function TransactionForm({
         </button>
       </div>
 
-      <form onSubmit={handleSubmit(processSubmit)}>
+      <form onSubmit={handleSubmit(async (data) => await processSubmit(data))}>
         <div className="space-y-4">
           {/* Currency Selector */}
           <div>
@@ -458,14 +487,42 @@ export default function TransactionForm({
 
           <button
             type="submit"
+            disabled={isUploading}
             className={cn(
-              "w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2",
+              "w-full py-2 px-4 rounded-md text-white font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 flex items-center justify-center",
               transactionType === "expense"
                 ? "bg-red-500 hover:bg-red-600 focus:ring-red-500"
-                : "bg-green-500 hover:bg-green-600 focus:ring-green-500"
+                : "bg-green-500 hover:bg-green-600 focus:ring-green-500",
+              isUploading && "opacity-70 cursor-not-allowed"
             )}
           >
-            Add {transactionType === "expense" ? "Expense" : "Income"}
+            {isUploading ? (
+              <>
+                <svg
+                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  ></circle>
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+                Saving...
+              </>
+            ) : (
+              <>Add {transactionType === "expense" ? "Expense" : "Income"}</>
+            )}
           </button>
         </div>
       </form>
