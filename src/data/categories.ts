@@ -203,6 +203,7 @@ const categoryKeywords = {
     "ranch",
     "blue cheese",
     "vinaigrette",
+    "Mango",
     "soy sauce",
     "teriyaki",
     "hoisin",
