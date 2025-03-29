@@ -48,6 +48,8 @@ const categoryKeywords = {
     "meal",
     "snack",
     "pizza",
+    "Carrot",
+    "Raddish",
     "burger",
     "bakery",
     "deli",
